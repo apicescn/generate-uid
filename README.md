@@ -27,7 +27,6 @@ UidGenerator是Java实现的，基于[Snowflake](https://github.com/twitter/snow
 
 Snowflake算法
 -------------
-![Snowflake](doc/snowflake.png)  
 Snowflake算法描述：指定机器 & 同一时刻 & 某一并发序列，是唯一的。据此可生成一个64 bits的唯一ID（long）。默认采用上图字节分配方式：
 
 * sign(1bit)  
@@ -79,11 +78,9 @@ Tail指针、Cursor指针用于环形数组上读写slot：
 
   表示Consumer消费到的最小序号(序号序列与Producer序列相同)。Cursor不能超过Tail，即不能消费未生产的slot。当Cursor已赶上tail，此时可通过```rejectedTakeBufferHandler```指定TakeRejectPolicy。
 
-![RingBuffer](doc/ringbuffer.png)  
 
 CachedUidGenerator采用了双RingBuffer，Uid-RingBuffer用于存储Uid、Flag-RingBuffer用于存储Uid状态(是否可填充、是否可消费)。由于数组元素在内存中是连续分配的，可最大程度利用CPU cache以提升性能。但同时会带来「伪共享」FalseSharing问题，为此在Tail、Cursor指针、Flag-RingBuffer中采用了CacheLine补齐方式。
 
-![FalseSharing](doc/cacheline_padding.png) 
 
 #### RingBuffer填充时机 ####
 * 初始化预填充
@@ -105,7 +102,7 @@ Quick Start
 ### 运行单元测试
 
 #### 步骤1: 安装依赖
-先下载[Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), [MySQL](https://dev.mysql.com/downloads/mysql/)和[Maven](https://maven.apache.org/download.cgi)
+先下载[Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html),和[Maven](https://maven.apache.org/download.cgi)
 
 ##### 设置环境变量
 maven无须安装, 设置好MAVEN_HOME即可. 可像下述脚本这样设置JAVA_HOME和MAVEN_HOME, 如已设置请忽略.
