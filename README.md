@@ -6,7 +6,6 @@
 ## 前言
 
 此项目计划将 [百度UID](https://github.com/baidu/uid-generator) 更改成Spring Boot的一个派生版本，改造为基于spring boot的版本，并封装为starter的方式，以方便作为组件引入到spring boot项目。
-同时将整合[美团leaf](https://tech.meituan.com/2019/03/07/open-source-project-leaf.html),结合ZooKeeper实现高可用容灾性强的分布式ID生成策略。
 
 工程结构说明：
 
@@ -201,108 +200,6 @@ public class CustomRejectedPutBufferHandler implements RejectedPutBufferHandler 
 }
 ```
 
-#### Mybatis配置
-
-在 *[application.yml](uid-generator/src/test/resources/application.yml)* 中配置数据源和mybatis：
-
-```yaml
-mybatis: 
-  configuration:
-    default-fetch-size: 100
-    default-statement-timeout: 30
-    map-underscore-to-camel-case: true
-  mapper-locations: classpath*:mapper/**/*.xml
-mapper: 
-  mappers: 
-    - tk.mybatis.mapper.common.Mapper
-spring: 
-  datasource: 
-    driver-class-name: com.mysql.jdbc.Driver
-    druid: 
-      filters: stat
-      defaultAutoCommit: true
-      initialSize: 2
-      max-active: 10
-      min-idle: 1
-      max-pool-prepared-statement-per-connection-size: -1
-      max-wait: 5000
-      pool-prepared-statements: false
-      test-on-borrow: false
-      test-on-return: false
-      test-while-idle: true
-      validation-query: SELECT 1 FROM DUAL
-    url: jdbc:mysql://localhost:xxxx/xxxx
-    username: xxxx
-    password: xxxx
-```
-
-修改 *[application.yml](uid-generator/src/test/resources/application.yml)* 配置中，url、username 和 password，确保mysql地址、名称、端口号、用户名和密码正确。
-
-#### 步骤4: 运行示例单测
-
-运行单测[CachedUidGeneratorTest](src/test/java/com/baidu/fsg/uid/CachedUidGeneratorTest.java), 展示UID生成、解析等功能
-```java
-@Resource
-private UidGenerator uidGenerator;
-
-@Test
-public void testSerialGenerate() {
-    // Generate UID
-    long uid = uidGenerator.getUID();
-
-    // Parse UID into [Timestamp, WorkerId, Sequence]
-    // {"UID":"180363646902239241","parsed":{    "timestamp":"2017-01-19 12:15:46",    "workerId":"4",    "sequence":"9"        }}
-    System.out.println(uidGenerator.parseUID(uid));
-
-}
-```
-
 ### 在Spring Boot项目使用UID组件
 
 本项目提供了一个名为 uid-consumer 的 Spring Boot 的项目例子以供参考。
-
-运行步骤：
-
-1、参考单元测试修改uid-consumer的 *[application.yml](uid-consumer/src/main/resources/application.yml)*；
-
-2、启动 uid-consumer 应用；
-
-3、在浏览器访问：
-
-- http://localhost:9999/testdefaultuid, 生成UID
-- http://localhost:9999/testcacheduid, 生成预先缓存的UID
-
-### 关于UID比特分配的建议
-
-对于**并发数要求不高、期望长期使用**的应用，可增加```timeBits```位数, 减少```seqBits```位数。例如节点采取用完即弃的 WorkerIdAssigner 策略，重启频率为12次/天，那么配置成 `{"workerBits":23,"timeBits":31,"seqBits":9}` 时，可支持28个节点以整体并发量14400 UID/s的速度持续运行68年。
-
-对于**节点重启频率频繁、期望长期使用**的应用, 可增加```workerBits```和```timeBits```位数, 减少```seqBits```位数. 例如节点采取用完即弃的WorkerIdAssigner策略, 重启频率为24*12次/天，那么配置成```{"workerBits":27,"timeBits":30,"seqBits":6}```时，可支持37个节点以整体并发量2400 UID/s的速度持续运行34年。
-
-#### 吞吐量测试
-在MacBook Pro（2.7GHz Intel Core i5, 8G DDR3）上进行了CachedUidGenerator（单实例）的UID吞吐量测试。
-
-首先固定住workerBits为任选一个值(如20)，分别统计timeBits变化时(如从25至32，总时长分别对应1年和136年)的吞吐量，如下表所示:
-
-|timeBits|25|26|27|28|29|30|31|32|
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|throughput|6,831,465|7,007,279|6,679,625|6,499,205|6,534,971|7,617,440|6,186,930|6,364,997|
-
-![throughput1](doc/throughput1.png)
-
-再固定住timeBits为任选一个值(如31)，分别统计workerBits变化时(如从20至29，总重启次数分别对应1百万和500百万)的吞吐量，如下表所示：
-
-|workerBits|20|21|22|23|24|25|26|27|28|29|
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|throughput|6,186,930|6,642,727|6,581,661|6,462,726|6,774,609|6,414,906|6,806,266|6,223,617|6,438,055|6,435,549|
-
-![throughput1](doc/throughput2.png)
-
-由此可见, 不管如何配置, CachedUidGenerator总能提供**600万/s**的稳定吞吐量, 只是使用年限会有所减少。这真的是太棒了。
-
-最后, 固定住workerBits和timeBits位数(如23和31), 分别统计不同数目(如1至8,本机CPU核数为4)的UID使用者情况下的吞吐量，
-
-|workerBits|1|2|3|4|5|6|7|8|
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|throughput|6,462,726|6,542,259|6,077,717|6,377,958|7,002,410|6,599,113|7,360,934|6,490,969|
-
-![throughput1](doc/throughput3.png)
