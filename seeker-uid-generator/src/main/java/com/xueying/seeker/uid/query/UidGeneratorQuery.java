@@ -1,5 +1,5 @@
 /**
- * Copyright (C), 2019, 安徽雪影实业有限公司
+ * Copyright (C), 2019
  * FileName: UidGeneratorQuery
  * Author:   Allen
  * Date:     2019/10/10 14:51

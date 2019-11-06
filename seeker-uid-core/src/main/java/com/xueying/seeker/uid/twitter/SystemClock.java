@@ -1,5 +1,5 @@
 /**
- * Copyright (C), 2019, 安徽雪影实业有限公司
+ * Copyright (C), 2019
  * FileName: SystemClock
  * Author:   Allen
  * Date:     2019年11月6日
