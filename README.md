@@ -11,7 +11,6 @@
 工程结构说明：
 
 ```shell
-├── LICENSE
 ├── README.md
 ├── seeker-uid-generator	# 分布式ID调用接口
 └──seeker-uid-core	# 分布式ID核心类与服务实现类
