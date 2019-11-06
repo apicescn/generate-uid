@@ -1,6 +1,7 @@
 # seeker-generate-uid
 ==========================
-探索者统一生产分布式ID策略生成器
+
+探索者统一生产分布式ID策略生成器，本生成ID去除了原百度对数据库的依赖，而改用NoSQL的mongodb方式来实现，以便于更好的以jar包方式引入，而不依赖于数据库，方便扩展。
 
 ## 前言
 
@@ -13,8 +14,7 @@
 ├── LICENSE
 ├── README.md
 ├── seeker-uid-generator	# 分布式ID调用接口
-├── seeker-uid-core	# 分布式ID核心类与服务实现类
-└── seeker-generator-test	# 分布式ID服务测试类
+└──seeker-uid-core	# 分布式ID核心类与服务实现类
 ```
 
 ## 概述
@@ -117,26 +117,7 @@ JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home";
 export JAVA_HOME;
 ```
 
-#### 步骤2: 创建表WORKER_NODE
-运行sql脚本以导入表WORKER_NODE，脚本如下：
-```sql
-DROP DATABASE IF EXISTS `xxxx`;
-CREATE DATABASE `xxxx` ;
-use `xxxx`;
-DROP TABLE IF EXISTS WORKER_NODE;
-CREATE TABLE WORKER_NODE
-(
-ID BIGINT NOT NULL AUTO_INCREMENT COMMENT uniqueId,
-HOST_NAME VARCHAR(64) NOT NULL COMMENT 'host name',
-PORT VARCHAR(64) NOT NULL COMMENT 'port',
-TYPE INT NOT NULL COMMENT 'node type: ACTUAL or CONTAINER',
-LAUNCH_DATE DATE NOT NULL COMMENT 'launch date',
-MODIFIED TIMESTAMP NOT NULL COMMENT 'modified time',
-CREATED TIMESTAMP NOT NULL COMMENT 'created time',
-PRIMARY KEY(ID)
-)
- COMMENT='DB WorkerID Assigner for UID Generator',ENGINE = INNODB;
-```
+#### 步骤2: 建立mongodb配置即可，不依赖于数据库
 
 #### 步骤3: 修改Spring Boot配置
 提供了两种生成器：[DefaultUidGenerator](uid-generator/src/main/java/io/prong/uid/impl/DefaultUidGenerator.java)、[CachedUidGenerator](uid-generator/src/main/java/io/prong/uid/impl/CachedUidGenerator.java)。如对UID生成性能有要求，请使用CachedUidGenerator。
