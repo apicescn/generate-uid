@@ -1,11 +1,12 @@
 # seeker-generate-uid
 ==========================
 
-探索者统一生产分布式ID策略生成器，本生成ID去除了原百度对数据库的依赖，而改用NoSQL的mongodb方式来实现，以便于更好的以jar包方式引入，而不依赖于数据库，方便扩展。
+探索者统一生产分布式ID策略生成器，去除了原百度对数据库的依赖，改用NoSQL的mongodb方式来实现，方便扩展。
 
 ## 前言
 
-此项目计划将 [百度UID](https://github.com/baidu/uid-generator) 更改成Spring Boot的一个派生版本，改造为基于spring boot的版本，并封装为starter的方式，以方便作为组件引入到spring boot项目。
+此项目计划将 [百度UID](https://github.com/baidu/uid-generator) 更改成Spring Boot的一个派生版本，改造为基于spring boot的版本，并封装为starter的方式，以方便作为组件引入到spring boot项目，
+并去除对数据库的依赖，方便服务化的资源引用，只须将seeker-uid-core发布maven中引入即可轻松使用，做到即开即用，无须过多配置。
 
 工程结构说明：
 
@@ -23,7 +24,7 @@ UidGenerator是Java实现的，基于[Snowflake](https://github.com/twitter/snow
 
 在实现上, UidGenerator通过借用未来时间来解决sequence天然存在的并发限制; 采用RingBuffer来缓存已生成的UID, 并行化UID的生产和消费，同时对CacheLine补齐，避免了由RingBuffer带来的硬件级「伪共享」问题. 最终单机QPS可达<font color=red>600万</font>。
 
-依赖版本：[Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)及以上版本，[MySQL](https://dev.mysql.com/downloads/mysql/)(内置WorkerID分配器, 启动阶段通过DB进行分配; 如自定义实现, 则DB非必选依赖）。
+依赖版本：[Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)及以上版本，[mongodb](https://www.mongodb.com/download-center)(内置WorkerID分配器, 启动阶段通过DB进行分配; 如自定义实现, 则DB非必选依赖）。
 
 Snowflake算法
 -------------
@@ -102,7 +103,7 @@ Quick Start
 ### 运行单元测试
 
 #### 步骤1: 安装依赖
-先下载[Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html),和[Maven](https://maven.apache.org/download.cgi)
+先下载[Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html),[mongodb](https://www.mongodb.com/download-center)和[Maven](https://maven.apache.org/download.cgi)
 
 ##### 设置环境变量
 maven无须安装, 设置好MAVEN_HOME即可. 可像下述脚本这样设置JAVA_HOME和MAVEN_HOME, 如已设置请忽略.
@@ -114,13 +115,30 @@ export JAVA_HOME;
 ```
 
 #### 步骤2: 建立mongodb配置即可，不依赖于数据库
+mongo的运行较为简单，本文环境以docker为基础，mongo创建执行如下脚本：
+```yaml
+version: '3.1'
 
+services:
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - /mnt/data/mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: uid
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+ ```
+      
 #### 步骤3: 修改Spring Boot配置
-提供了两种生成器：[DefaultUidGenerator](uid-generator/src/main/java/io/prong/uid/impl/DefaultUidGenerator.java)、[CachedUidGenerator](uid-generator/src/main/java/io/prong/uid/impl/CachedUidGenerator.java)。如对UID生成性能有要求，请使用CachedUidGenerator。
+提供了两种生成器：[DefaultUidGenerator](DefaultUidGenerator.java)、[CachedUidGenerator](CachedUidGenerator.java)。如对UID生成性能有要求，请使用CachedUidGenerator。
 
 #### DefaultUidGenerator配置
 
-在 *[application.yml](uid-generator/src/test/resources/application.yml)* 中配置ID生成规则：
+在 *[application.yml](application.yml)* 中配置ID生成规则：
 
 ```yaml
 # 以下为可选配置, 如未指定将采用默认值
@@ -199,4 +217,4 @@ public class CustomRejectedPutBufferHandler implements RejectedPutBufferHandler 
 
 ### 在Spring Boot项目使用UID组件
 
-本项目提供了一个名为 uid-consumer 的 Spring Boot 的项目例子以供参考。
+本项目提供了一个名为 seeker-uid-generator 的 Spring Boot 的项目例子以供参考。
