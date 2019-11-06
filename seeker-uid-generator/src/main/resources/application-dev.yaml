@@ -1,0 +1,23 @@
+spring:
+  #mongo配置
+  data:
+    mongodb:
+      host: ${maven_docker.ip}
+      database: uid
+      port: 27017
+#      username: uid
+#      password: 123456
+
+# 以下为可选配置, 如未指定将采用默认值
+seeker:
+  uid:
+    timeBits: 34            # 时间位, 默认:30
+    workerBits: 14           # 机器位, 默认:=6
+    seqBits: 15               # 序列号, 默认:7
+    epochStr: "2019-10-01"   # 初始时间, 默认:"2019-02-20"
+    enableBackward: true    # 是否容忍时钟回拨, 默认:true
+    maxBackwardSeconds: 1   # 时钟回拨最长容忍时间（秒）, 默认:1
+    CachedUidGenerator:     # CachedUidGenerator相关参数
+      boostPower: 3          # RingBuffer size扩容参数, 可提高UID生成的吞吐量, 默认:3
+      paddingFactor: 50      # 指定何时向RingBuffer中填充UID, 取值为百分比(0, 100), 默认为50
+

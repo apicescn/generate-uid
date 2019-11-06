@@ -1,0 +1,16 @@
+info:
+  version: @version@
+  groupId: @groupId@
+  artifactId: @artifactId@
+
+server:
+  port: 5001
+  servlet:
+    context-path: /uid
+
+spring:
+  application:
+    name: seeker-uid-generator
+#  不能与下述nacos-config同时开启，否则nacos无效
+  profiles:
+    active: ${maven_spring.profiles.active}

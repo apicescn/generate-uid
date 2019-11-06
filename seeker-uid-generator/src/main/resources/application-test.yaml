@@ -1,0 +1,9 @@
+spring:
+  #mongo配置
+  data:
+    mongodb:
+      host: ${maven_docker.ip}
+      database: uid
+      port: 27017
+    #      username: root
+    #      password: 123456
